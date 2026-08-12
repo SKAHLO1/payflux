@@ -1,5 +1,0 @@
-# Kept alongside the npm `workspaces` field so the repo installs with either package manager.
-packages:
-  - "packages/*"
-  - "backend"
-  - "contracts"
