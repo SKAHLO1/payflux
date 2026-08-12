@@ -2,6 +2,8 @@ import { randomUUID } from "node:crypto"
 import type { Merchant, PaymentIntent, WebhookDelivery, WebhookEventType } from "../domain/types.js"
 import { getStore } from "../store/index.js"
 import { signWebhook, SIGNATURE_HEADER, REQUEST_ID_HEADER } from "./signer.js"
+import { startSweeper } from "../util/sweeper.js"
+import { env } from "../config/env.js"
 
 /**
  * Webhook delivery with bounded exponential-backoff retries.
@@ -139,19 +141,19 @@ async function scheduleRetry(
 
 /** Periodic sweeper for deliveries whose backoff has elapsed. */
 export function startWebhookSweeper(getSecret: (merchantId: string) => Promise<string | undefined>) {
-  const timer = setInterval(async () => {
-    try {
+  return startSweeper({
+    name: "webhook sweeper",
+    intervalMs: 15_000 * env.PAYFLUX_POLL_SCALE,
+    tick: async () => {
       const store = await getStore()
       const pending = await store.listPendingWebhookDeliveries(new Date())
       for (const delivery of pending) {
         const secret = await getSecret(delivery.merchantId)
         if (secret) await attempt(delivery, secret)
       }
-    } catch (error) {
-      console.error("[payflux] webhook sweeper error:", error)
-    }
-  }, 15_000)
-
-  timer.unref?.()
-  return () => clearInterval(timer)
+      // Pending deliveries mean the loop should stay responsive; an empty sweep lets it slow.
+      return pending.length > 0
+    },
+  })
 }
+

@@ -137,6 +137,19 @@ const schema = z.object({
   /** Tolerance for amount matching, in basis points of the expected amount. */
   AMOUNT_TOLERANCE_BPS: z.coerce.number().int().min(0).max(1000).default(50),
 
+  /**
+   * Multiplies every background sweeper's poll interval.
+   *
+   * The sweepers are the dominant cost against a Firestore quota: they poll whether or not
+   * anything is happening, and an empty query still bills a read. Idle backoff handles the
+   * common case, but this is the dial to reach for when a deployment must fit a fixed daily
+   * allowance — 2 halves the read rate, 4 quarters it, at the cost of detection latency.
+   *
+   * Latency here is nearly free: an FDC voting round takes minutes, so a watcher that notices a
+   * payment ten seconds later changes nothing a customer can perceive.
+   */
+  PAYFLUX_POLL_SCALE: z.coerce.number().min(1).max(60).default(1),
+
   // --- Persistence ------------------------------------------------------
   FIREBASE_PROJECT_ID: optional(z.string()),
   FIREBASE_CLIENT_EMAIL: optional(z.string()),

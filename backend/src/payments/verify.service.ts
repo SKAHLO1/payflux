@@ -17,7 +17,8 @@ import {
   explorerTxUrl,
   type XrplPaymentTransaction,
 } from "../verification/xrpl.payment.js"
-import { NETWORKS } from "../config/env.js"
+import { NETWORKS, env } from "../config/env.js"
+import { startSweeper } from "../util/sweeper.js"
 
 /**
  * The verification orchestrator: XRPL transaction -> FDC attestation -> Coston2 record.
@@ -806,13 +807,9 @@ function reconcileNative(
  * ready. State lives on the payment record, so a restart mid-round resumes rather than stranding
  * the payment.
  */
-export function startFdcFinalizationSweeper(intervalMs = 20_000) {
-  let running = false
-
+export function startFdcFinalizationSweeper(intervalMs = 20_000 * env.PAYFLUX_POLL_SCALE) {
   const tick = async () => {
-    if (running) return
-    running = true
-    try {
+    {
       const store = await getStore()
       const pending = await store.listPaymentsByStatus("verifying", 25)
 
@@ -861,19 +858,14 @@ export function startFdcFinalizationSweeper(intervalMs = 20_000) {
           console.error(`[payflux] finalization failed for ${payment.id}:`, error)
         })
       }
-    } catch (error) {
-      console.error("[payflux] FDC finalization sweeper error:", error)
-    } finally {
-      running = false
+
+      // Payments awaiting a proof keep the loop at full speed; nothing pending lets it idle.
+      return pending.length > 0
     }
   }
 
-  const timer = setInterval(tick, intervalMs)
-  timer.unref?.()
-  void tick()
-
-  console.log(`[payflux] FDC finalization sweeper polling every ${intervalMs / 1000}s`)
-  return () => clearInterval(timer)
+  console.log(`[payflux] FDC finalization sweeper polling every ${intervalMs / 1000}s when busy`)
+  return startSweeper({ name: "FDC finalization sweeper", intervalMs, tick })
 }
 
 /**
