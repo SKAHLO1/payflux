@@ -283,6 +283,31 @@ export const rateLimiter = rateLimit({
   },
 })
 
+/**
+ * A much tighter limit for key introspection.
+ *
+ * `/v1/keys/self` answers "is this key real, and what does it carry?", which makes it the most
+ * useful endpoint on the API to point a key-guessing script at: one request, one unambiguous
+ * answer, no side effects to slow an attacker down. The general 120/min ceiling is far too
+ * generous for that shape of question.
+ *
+ * Limited on IP as well as key id, because an attacker probing unknown keys never gets an
+ * `apiKeyId` assigned — a key-only limiter would leave exactly the abuse case unbounded.
+ */
+export const introspectionRateLimiter = rateLimit({
+  windowMs: 60_000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  keyGenerator: (req: Request) => `${req.ip ?? "anonymous"}:${req.apiKeyId ?? "unknown"}`,
+  message: {
+    error: {
+      code: "RATE_LIMITED",
+      message: "Too many key verification attempts. Wait a minute and try again.",
+    },
+  },
+})
+
 // ---------------------------------------------------------------------------
 // Validation
 // ---------------------------------------------------------------------------
