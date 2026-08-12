@@ -57,8 +57,9 @@ async function getAuth() {
             credential: admin.default.credential.cert({
               projectId: env.FIREBASE_PROJECT_ID,
               clientEmail: env.FIREBASE_CLIENT_EMAIL,
-              // Env vars cannot hold real newlines; the PEM needs them back.
-              privateKey: env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, "\n"),
+              // Already a real PEM — config/env.ts normalizes it at load and refuses to boot
+              // if it is unusable, so there is nothing left to repair here.
+              privateKey: env.FIREBASE_PRIVATE_KEY!,
             }),
           })
       return app.auth()
