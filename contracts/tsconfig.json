@@ -1,0 +1,17 @@
+{
+  "_note": "CommonJS is required: Hardhat 2 loads hardhat.config.ts and the tests through ts-node in CJS mode. Without this file, ts-node inherits the root tsconfig's `module: esnext` and Node fails to load the config as ESM.",
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2023"],
+    "module": "CommonJS",
+    "moduleResolution": "node",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
+    "outDir": "dist",
+    "types": ["node", "mocha", "chai"]
+  },
+  "include": ["./hardhat.config.ts", "./scripts/**/*.ts", "./test/**/*.ts"]
+}

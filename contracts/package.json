@@ -1,0 +1,31 @@
+{
+  "name": "@payflux/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "PayFlux PaymentRegistry — FDC-verified cross-ecosystem payment records on Flare Coston2",
+  "scripts": {
+    "build": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:coston2": "hardhat run scripts/deploy.ts --network coston2",
+    "verify:coston2": "hardhat run scripts/verify.ts --network coston2"
+  },
+  "//": "Individual plugins rather than hardhat-toolbox: the toolbox pulls in gas reporting, coverage and typechain, none of which this project uses.",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-chai-matchers": "^2.0.7",
+    "@nomicfoundation/hardhat-ethers": "^3.0.8",
+    "@nomicfoundation/hardhat-verify": "^2.0.11",
+    "@types/chai": "^4.3.16",
+    "@types/mocha": "^10.0.7",
+    "@types/node": "^22.5.0",
+    "chai": "^4.4.1",
+    "dotenv": "^16.4.5",
+    "ethers": "^6.13.2",
+    "hardhat": "^2.22.10",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.5.4"
+  },
+  "dependencies": {
+    "@flarenetwork/flare-periphery-contracts": "^0.1.21",
+    "@openzeppelin/contracts": "^5.0.2"
+  }
+}
