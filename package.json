@@ -2,7 +2,7 @@
   "name": "payflux",
   "version": "0.1.0",
   "private": true,
-  "description": "PayFlux \u2014 asset-agnostic payment infrastructure on Flare Coston2 and XRPL Testnet",
+  "description": "PayFlux — asset-agnostic payment infrastructure on Flare Coston2 and XRPL Testnet",
   "scripts": {
     "dev": "next dev",
     "dev:api": "npm run dev --workspace @payflux/backend",
@@ -65,7 +65,7 @@
     "firebase": "^11.10.0",
     "input-otp": "1.4.1",
     "lucide-react": "^0.454.0",
-    "next": "15.5.4",
+    "next": "^15.5.23",
     "next-themes": "^0.4.6",
     "react": "19.1.0",
     "react-day-picker": "9.8.0",
