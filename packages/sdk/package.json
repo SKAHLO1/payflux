@@ -1,0 +1,39 @@
+{
+  "name": "@payflux/node",
+  "version": "0.1.0",
+  "description": "PayFlux Node SDK — accept interoperable blockchain assets with one payment API",
+  "type": "module",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "exports": {
+    ".": {
+      "types": "./src/index.ts",
+      "default": "./src/index.ts"
+    }
+  },
+  "//": "Source-first exports so the demo store and Next app consume the SDK without a build step (see transpilePackages in next.config.mjs). publishConfig swaps to the compiled output on npm publish.",
+  "publishConfig": {
+    "main": "dist/index.js",
+    "types": "dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "import": "./dist/index.js"
+      }
+    }
+  },
+  "files": ["dist", "src"],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "keywords": ["payments", "flare", "xrpl", "fassets", "fdc", "web3"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=20"
+  },
+  "devDependencies": {
+    "@types/node": "^22.5.0",
+    "typescript": "^5.5.4"
+  }
+}

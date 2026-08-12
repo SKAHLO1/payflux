@@ -1,0 +1,52 @@
+
+{
+  "//": "Composite indexes required by PayFlux's Firestore queries. Firestore builds single-field indexes automatically, but any query combining a filter with an orderBy — or two filters on different fields — needs one of these declared. Without them the query fails at runtime with FAILED_PRECONDITION, not at deploy time. Apply with: firebase deploy --only firestore:indexes",
+  "indexes": [
+    {
+      "//": "listPayments — the dashboard Overview and Payments pages.",
+      "collectionGroup": "payments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "merchantId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "listExpirablePayments — the expiry sweeper.",
+      "collectionGroup": "payments",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "expiresAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "//": "listEvents — the payment timeline and proof view.",
+      "collectionGroup": "paymentEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "paymentId", "order": "ASCENDING" },
+        { "fieldPath": "timestamp", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "//": "listAuditEvents — the account audit log.",
+      "collectionGroup": "auditEvents",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "accountId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "//": "listPendingWebhookDeliveries — the retry sweeper.",
+      "collectionGroup": "webhookDeliveries",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "status", "order": "ASCENDING" },
+        { "fieldPath": "nextAttemptAt", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
