@@ -1,0 +1,71 @@
+rules_version = '2';
+
+// =============================================================================
+// PayFlux — Firestore security rules
+// =============================================================================
+//
+// POSTURE: deny every client request. This is deliberate, not a placeholder.
+//
+// Why
+// ---
+// No browser in this system ever talks to Firestore. The client imports
+// `firebase/app` and `firebase/auth` only — never `firebase/firestore`. Sign-in
+// produces an ID token, that token goes to the PayFlux API, and the API verifies
+// it server-side and does all data access itself with the Admin SDK.
+//
+// The Admin SDK bypasses these rules entirely, so locking clients out costs the
+// product nothing and removes a whole class of exposure: payment amounts, API key
+// hashes, audit trails and merchant settlement addresses can never be read from a
+// browser, whatever a future frontend bug does with a Firebase handle.
+//
+// The blast radius is therefore the service account, not these rules. Keep
+// FIREBASE_PRIVATE_KEY server-side; it is the only credential that can read this
+// data.
+//
+// What this does NOT protect against
+// ----------------------------------
+// - Anything the API itself exposes. Endpoint authorisation lives in
+//   `backend/src/middleware/index.ts` (API keys, scopes) and `auth/firebase.ts`
+//   (sessions) — not here.
+// - A leaked service account key. Rotate it in the Firebase console if exposed.
+//
+// If you ever add client-side Firestore reads
+// -------------------------------------------
+// Do not loosen this file globally. Add one narrowly-scoped `match` block per
+// collection, owner-checked, read-only. A correct example is at the bottom.
+// Writes must stay server-only: every write in PayFlux is a state transition the
+// API is responsible for enforcing (payment status, key rotation, audit append),
+// and a client that can write bypasses that machinery completely.
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Collections in use: users, accounts, apiKeys, auditEvents, payments,
+    // paymentEvents, settlements, webhookDeliveries, idempotencyKeys.
+    // All server-only. This catch-all covers current and future collections, so
+    // adding one cannot accidentally ship world-readable.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // -------------------------------------------------------------------------
+    // Reference only — intentionally not active.
+    //
+    // If a future dashboard needs to read a developer's own payments directly:
+    //
+    //   match /payments/{paymentId} {
+    //     allow read: if request.auth != null
+    //                 && resource.data.merchantId == 'acct_' + request.auth.uid;
+    //     allow write: if false;   // never — the API owns state transitions
+    //   }
+    //
+    // Note `'acct_' + request.auth.uid` mirrors `accountIdFor()` in
+    // backend/src/auth/firebase.ts. If that derivation changes, this must too —
+    // which is one more reason to prefer going through the API.
+    //
+    // apiKeys and auditEvents must stay server-only regardless: apiKeys holds
+    // secret digests, and an append-only trail a client can read is a trail a
+    // client can enumerate.
+    // -------------------------------------------------------------------------
+  }
+}
