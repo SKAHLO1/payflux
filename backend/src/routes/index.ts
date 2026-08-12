@@ -9,6 +9,7 @@ import {
 } from "../middleware/index.js"
 import { paymentsRouter } from "./payments.routes.js"
 import { apiKeysRouter } from "./api-keys.routes.js"
+import { keysRouter } from "./keys.routes.js"
 import { accountRouter } from "./account.routes.js"
 import { isAuthConfigured } from "../auth/firebase.js"
 import { listAssets } from "../registry/assets.js"
@@ -25,7 +26,10 @@ import { signWebhook } from "../webhooks/signer.js"
 export const apiRouter = Router()
 
 apiRouter.use("/payments", paymentsRouter)
+// Session-authenticated key *management*. Distinct from /keys below, which is authenticated by
+// an API key and only ever reports on that same key.
 apiRouter.use("/api-keys", apiKeysRouter)
+apiRouter.use("/keys", keysRouter)
 apiRouter.use("/account", accountRouter)
 
 // ---------------------------------------------------------------------------

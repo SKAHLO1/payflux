@@ -28,6 +28,7 @@ const NAV = [
   { href: "/dashboard/assets", label: "Assets" },
   { href: "/dashboard/webhooks", label: "Webhooks" },
   { href: "/dashboard/api-keys", label: "API keys" },
+  { href: "/dashboard/playground", label: "Playground" },
   { href: "/dashboard/audit", label: "Audit log" },
   { href: "/dashboard/diagnostics", label: "Diagnostics" },
   { href: "/dashboard/settings", label: "Settings" },
