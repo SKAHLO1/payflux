@@ -19,6 +19,7 @@ import { paymentBus } from "../events/bus.js"
 import { enqueue } from "../webhooks/dispatcher.js"
 import * as registry from "../chain/payment-registry.js"
 import { xrpToDrops, dropsToXrp, buildMemo } from "../verification/xrpl.payment.js"
+import { startSweeper } from "../util/sweeper.js"
 import * as fassets from "../chain/fassets.js"
 import { decimalsFor, toSmallestUnit } from "../verification/coston2.payment.js"
 
@@ -465,8 +466,10 @@ export async function listEvents(paymentId: string): Promise<PaymentEvent[]> {
  * this provable rather than merely careful (see docs/fdc-flow.md).
  */
 export function startExpirySweeper(check: (payment: PaymentIntent) => Promise<boolean>) {
-  const timer = setInterval(async () => {
-    try {
+  return startSweeper({
+    name: "expiry sweeper",
+    intervalMs: 30_000 * env.PAYFLUX_POLL_SCALE,
+    tick: async () => {
       const store = await getStore()
       const candidates = await store.listExpirablePayments(new Date())
       for (const payment of candidates) {
@@ -484,13 +487,10 @@ export function startExpirySweeper(check: (payment: PaymentIntent) => Promise<bo
           }
         }
       }
-    } catch (error) {
-      console.error("[payflux] expiry sweeper error:", error)
-    }
-  }, 30_000)
-
-  timer.unref?.()
-  return () => clearInterval(timer)
+      // An empty sweep is the common case — nothing is expiring most of the time.
+      return candidates.length > 0
+    },
+  })
 }
 
 // ---------------------------------------------------------------------------

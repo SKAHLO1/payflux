@@ -16,6 +16,7 @@
     "contracts:deploy": "npm run deploy:coston2 --workspace @payflux/contracts",
     "poc": "tsx scripts/poc/e2e.ts",
     "poc:check": "tsx scripts/poc/e2e.ts --check",
+    "poc:auto": "tsx scripts/poc/e2e.ts --pay",
     "xrpl:fund": "tsx scripts/xrpl/pay.ts --fund",
     "xrpl:pay": "tsx scripts/xrpl/pay.ts",
     "verify:key": "tsx scripts/verify-key.ts"

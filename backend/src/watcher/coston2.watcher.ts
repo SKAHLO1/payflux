@@ -1,8 +1,10 @@
-import type { Merchant, PaymentIntent } from "../domain/types.js"
+import type { Merchant, PaymentIntent, PaymentStatus } from "../domain/types.js"
 import { getStore } from "../store/index.js"
 import * as coston2 from "../verification/coston2.payment.js"
 import * as payments from "../payments/payment.service.js"
 import { verifyNativePayment } from "../payments/verify.service.js"
+import { startSweeper } from "../util/sweeper.js"
+import { env } from "../config/env.js"
 
 /**
  * Watches Coston2 for FXRP and C2FLR payments to merchant addresses.
@@ -26,13 +28,17 @@ const MERCHANT_REFRESH_MS = 60_000
 const INITIAL_LOOKBACK_BLOCKS = 600
 const MAX_WATCHED_ADDRESSES = 25
 
-const OPEN_STATUSES = ["created", "awaiting_payment", "payment_detected", "partially_paid"]
+const OPEN_STATUSES: PaymentStatus[] = [
+  "created",
+  "awaiting_payment",
+  "payment_detected",
+  "partially_paid",
+]
 
 export function startCoston2Watcher() {
   let watched: Merchant[] = []
   let lastRefresh = 0
   let lastScannedBlock = 0
-  let running = false
   const handled = new Set<string>()
 
   const refreshMerchants = async () => {
@@ -57,40 +63,43 @@ export function startCoston2Watcher() {
     }
   }
 
+  /**
+   * The open FXRP/C2FLR payments this watcher might need to match.
+   *
+   * One status-filtered query across all merchants, not a 100-document listing per merchant.
+   * The old shape read up to 100 payment documents per merchant every poll, whether or not
+   * anything was open — by far the largest consumer of the Firestore read quota, against a
+   * collection that is almost entirely settled. Asset is filtered in memory because it needs no
+   * index and the query already returns only a handful of rows.
+   */
   const openNativePayments = async (): Promise<PaymentIntent[]> => {
     const store = await getStore()
-    const all: PaymentIntent[] = []
-    for (const merchant of watched) {
-      const list = await store.listPayments(merchant.id, 100)
-      all.push(
-        ...list.filter(
-          (payment) =>
-            OPEN_STATUSES.includes(payment.status) &&
-            ["FXRP", "C2FLR"].includes(payment.selectedAsset?.toUpperCase() ?? ""),
-        ),
-      )
-    }
-    return all
+    const open = await store.listOpenPayments([...OPEN_STATUSES], 50)
+    const watchedIds = new Set(watched.map((merchant) => merchant.id))
+
+    return open.filter(
+      (payment) =>
+        watchedIds.has(payment.merchantId) &&
+        ["FXRP", "C2FLR"].includes(payment.selectedAsset?.toUpperCase() ?? ""),
+    )
   }
 
   const tick = async () => {
-    if (running) return
-    running = true
-    try {
+    {
       if (Date.now() - lastRefresh > MERCHANT_REFRESH_MS) await refreshMerchants()
-      if (watched.length === 0) return
+      if (watched.length === 0) return false
 
       const open = await openNativePayments()
       if (open.length === 0) {
         // Nothing to match. Keep the cursor current so the next real intent does not trigger a
         // huge catch-up scan.
         lastScannedBlock = await coston2.currentBlock()
-        return
+        return false
       }
 
       const head = await coston2.currentBlock()
       if (lastScannedBlock === 0) lastScannedBlock = Math.max(0, head - INITIAL_LOOKBACK_BLOCKS)
-      if (head <= lastScannedBlock) return
+      if (head <= lastScannedBlock) return false
 
       const store = await getStore()
 
@@ -116,25 +125,26 @@ export function startCoston2Watcher() {
       }
 
       lastScannedBlock = head
-    } catch (error) {
-      console.error("[payflux] Coston2 watcher error:", error)
-    } finally {
-      running = false
+
+      // Open payments existed this pass, so keep polling at full speed.
+      return true
     }
   }
 
-  const timer = setInterval(tick, POLL_INTERVAL_MS)
-  timer.unref?.()
+  const stop = startSweeper({
+    name: "Coston2 watcher",
+    intervalMs: POLL_INTERVAL_MS * env.PAYFLUX_POLL_SCALE,
+    tick,
+  })
 
   void refreshMerchants()
-    .then(() => {
+    .then(() =>
       console.log(
         `[payflux] Coston2 watcher polling ${watched.length} address(es) every ` +
-          `${POLL_INTERVAL_MS / 1000}s for FXRP and C2FLR payments`,
-      )
-      return tick()
-    })
+          `${(POLL_INTERVAL_MS * env.PAYFLUX_POLL_SCALE) / 1000}s when busy for FXRP and C2FLR`,
+      ),
+    )
     .catch((error) => console.error("[payflux] Coston2 watcher failed to start:", error))
 
-  return () => clearInterval(timer)
+  return stop
 }

@@ -34,6 +34,17 @@ export interface Store {
   listPaymentsByStatus(status: PaymentIntent["status"], limit?: number): Promise<PaymentIntent[]>
 
   /**
+   * Open payments across all merchants, for the Coston2 watcher.
+   *
+   * Exists because the obvious implementation is ruinously expensive. Listing every merchant's
+   * last 100 payments and filtering in memory reads up to 100 documents per merchant on every
+   * poll — several hundred thousand reads a day against a collection that is almost always
+   * entirely settled. Filtering on status in the query returns the handful that are actually
+   * open, usually none.
+   */
+  listOpenPayments(statuses: PaymentIntent["status"][], limit?: number): Promise<PaymentIntent[]>
+
+  /**
    * Takes the processing claim on a payment, atomically.
    *
    * Returns the claimed payment, or undefined when the payment has moved on from
@@ -165,6 +176,10 @@ class MemoryStore implements Store {
 
   async listPaymentsByStatus(status: PaymentIntent["status"], limit = 50) {
     return [...this.payments.values()].filter((p) => p.status === status).slice(0, limit)
+  }
+
+  async listOpenPayments(statuses: PaymentIntent["status"][], limit = 50) {
+    return [...this.payments.values()].filter((p) => statuses.includes(p.status)).slice(0, limit)
   }
 
   async appendEvent(event: Omit<PaymentEvent, "id">) {
@@ -379,6 +394,12 @@ class FirestoreStore implements Store {
   async listPaymentsByStatus(status: PaymentIntent["status"], limit = 50) {
     // Single-field filter plus limit — no composite index required.
     const snapshot = await this.col("payments").where("status", "==", status).limit(limit).get()
+    return snapshot.docs.map((d) => d.data() as PaymentIntent)
+  }
+
+  async listOpenPayments(statuses: PaymentIntent["status"][], limit = 50) {
+    // Also single-field ("in" on status), so this needs no composite index either.
+    const snapshot = await this.col("payments").where("status", "in", statuses).limit(limit).get()
     return snapshot.docs.map((d) => d.data() as PaymentIntent)
   }
 

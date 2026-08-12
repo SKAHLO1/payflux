@@ -3,6 +3,8 @@ import { getStore } from "../store/index.js"
 import { getIncomingPayments, decodeStandardPaymentReference } from "../verification/xrpl.payment.js"
 import * as payments from "../payments/payment.service.js"
 import * as verification from "../payments/verify.service.js"
+import { startSweeper } from "../util/sweeper.js"
+import { env } from "../config/env.js"
 
 /**
  * Polls XRPL Testnet for payments carrying a PayFlux reference and kicks off verification.
@@ -32,7 +34,6 @@ export function startXrplWatcher() {
   const unwatchable = new Set<string>()
   let watched: Merchant[] = []
   let lastRefresh = 0
-  let running = false
 
   const refreshMerchants = async () => {
     const store = await getStore()
@@ -62,13 +63,15 @@ export function startXrplWatcher() {
   }
 
   const tick = async () => {
-    if (running) return
-    running = true
-    try {
+    // Work found this pass, which keeps the loop at full speed. A watcher with nothing to see
+    // is the normal state, and backing off there is the entire point.
+    let detected = false
+
+    {
       if (Date.now() - lastRefresh > MERCHANT_REFRESH_MS) {
         await refreshMerchants()
       }
-      if (watched.length === 0) return
+      if (watched.length === 0) return false
 
       const store = await getStore()
 
@@ -101,6 +104,7 @@ export function startXrplWatcher() {
           if (!payment) continue
 
           seen.add(tx.hash)
+          detected = true
 
           if (!["created", "awaiting_payment", "partially_paid"].includes(payment.status)) continue
 
@@ -123,25 +127,26 @@ export function startXrplWatcher() {
             })
         }
       }
-    } catch (error) {
-      console.error("[payflux] XRPL watcher error:", error)
-    } finally {
-      running = false
+
+      return detected
     }
   }
 
-  const timer = setInterval(tick, POLL_INTERVAL_MS)
-  timer.unref?.()
+  const stop = startSweeper({
+    name: "XRPL watcher",
+    intervalMs: POLL_INTERVAL_MS * env.PAYFLUX_POLL_SCALE,
+    tick,
+  })
 
   void refreshMerchants()
-    .then(() => {
+    .then(() =>
       console.log(
         `[payflux] XRPL watcher polling ${watched.length} address(es) every ` +
-          `${POLL_INTERVAL_MS / 1000}s, refreshing the set every ${MERCHANT_REFRESH_MS / 1000}s`,
-      )
-      return tick()
-    })
+          `${(POLL_INTERVAL_MS * env.PAYFLUX_POLL_SCALE) / 1000}s when busy, ` +
+          `refreshing the set every ${MERCHANT_REFRESH_MS / 1000}s`,
+      ),
+    )
     .catch((error) => console.error("[payflux] XRPL watcher failed to start:", error))
 
-  return () => clearInterval(timer)
+  return stop
 }
