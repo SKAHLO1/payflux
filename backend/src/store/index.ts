@@ -551,7 +551,8 @@ export async function getStore(): Promise<Store> {
             credential: admin.default.credential.cert({
               projectId: env.FIREBASE_PROJECT_ID,
               clientEmail: env.FIREBASE_CLIENT_EMAIL,
-              privateKey: env.FIREBASE_PRIVATE_KEY!.replace(/\\n/g, "\n"),
+              // Normalized to a real PEM at config load — see config/env.ts.
+              privateKey: env.FIREBASE_PRIVATE_KEY!,
             }),
           })
       const db = app.firestore()

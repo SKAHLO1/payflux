@@ -23,6 +23,37 @@ const COSTON2_CHAIN_ID = 114
 const optional = <T extends z.ZodTypeAny>(schema: T) =>
   z.preprocess((value) => (value === "" ? undefined : value), schema.optional())
 
+/**
+ * Turns whatever a dashboard stored back into a parseable PEM.
+ *
+ * Three corruptions, all of which produce the same opaque OpenSSL DECODER error:
+ *
+ *   1. Surrounding quotes kept as part of the value, so the PEM starts with `"`.
+ *   2. `\n` left escaped, so the PEM is one long line with no structure.
+ *   3. Literal `\r\n` from a Windows clipboard, which OpenSSL will not accept.
+ *
+ * Undoing all three is safe: a correct PEM passes through each step unchanged.
+ */
+function normalizePem(raw: string): string {
+  let key = raw.trim()
+
+  // Only strip a *matched* pair — a stray quote inside the value is not a wrapper.
+  const quoted =
+    (key.startsWith('"') && key.endsWith('"')) || (key.startsWith("'") && key.endsWith("'"))
+  if (quoted && key.length >= 2) key = key.slice(1, -1)
+
+  return key.replace(/\\r/g, "").replace(/\\n/g, "\n").replace(/\r\n/g, "\n").trim()
+}
+
+/** Whether a normalized key is something OpenSSL will actually accept. */
+function looksLikePem(key: string): boolean {
+  return (
+    /^-----BEGIN [A-Z ]*PRIVATE KEY-----/.test(key) &&
+    /-----END [A-Z ]*PRIVATE KEY-----$/.test(key.trim()) &&
+    key.includes("\n")
+  )
+}
+
 const schema = z.object({
   NODE_ENV: z.enum(["development", "test", "production"]).default("development"),
   PORT: z.coerce.number().int().positive().default(4000),
@@ -109,7 +140,19 @@ const schema = z.object({
   // --- Persistence ------------------------------------------------------
   FIREBASE_PROJECT_ID: optional(z.string()),
   FIREBASE_CLIENT_EMAIL: optional(z.string()),
-  FIREBASE_PRIVATE_KEY: optional(z.string()),
+  /**
+   * Service account signing key, normalized to a real PEM at load.
+   *
+   * Every hosting dashboard mangles this value differently: some keep the quotes you typed as
+   * part of the value, some convert `\n` to real newlines, some leave them escaped. All three
+   * shapes fail identically and unhelpfully at the first Firestore call, as
+   * `error:1E08010C:DECODER routines::unsupported` under forty lines of gRPC stack — a message
+   * that says nothing about the environment variable that actually caused it.
+   *
+   * Accepting every shape here is worth more than insisting on one, because the person pasting
+   * the key cannot see what the dashboard did to it.
+   */
+  FIREBASE_PRIVATE_KEY: optional(z.string().transform(normalizePem)),
 
   /**
    * Development-only switch. When true the API serves clearly-labelled DEMO MODE data instead of
@@ -160,6 +203,24 @@ function load(): Env {
     fail("PAYFLUX_DEMO_MODE cannot be enabled in production.")
   }
 
+  /*
+   * Catch a malformed service account key here rather than at the first Firestore write.
+   *
+   * Left to Firestore, this surfaces as `DECODER routines::unsupported` inside a gRPC stack,
+   * long after boot, with nothing naming the variable at fault. Checking it at load keeps the
+   * failure where the cause is.
+   */
+  if (env.FIREBASE_PRIVATE_KEY && !looksLikePem(env.FIREBASE_PRIVATE_KEY)) {
+    fail(
+      `FIREBASE_PRIVATE_KEY is not a usable PEM after normalization.\n` +
+        `  It must begin "-----BEGIN PRIVATE KEY-----" and end "-----END PRIVATE KEY-----".\n` +
+        `  Paste it with its \\n escapes intact and no surrounding quotes — the quotes are\n` +
+        `  frequently stored as part of the value, which is what breaks the key.\n` +
+        `  Got ${env.FIREBASE_PRIVATE_KEY.length} chars starting: ` +
+        `${JSON.stringify(env.FIREBASE_PRIVATE_KEY.slice(0, 32))}`,
+    )
+  }
+
   return env
 }
 
@@ -199,6 +260,9 @@ export function capabilities(): Capabilities {
     demoMode: env.PAYFLUX_DEMO_MODE,
   }
 }
+
+/** Exposed for tests only. These are pure string helpers with no configuration state. */
+export const __testing = { normalizePem, looksLikePem }
 
 export const NETWORKS = {
   flare: {
