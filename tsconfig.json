@@ -20,7 +20,7 @@
     ],
     "paths": {
       "@/*": ["./*"],
-      "@payflux/node": ["./packages/sdk/src/index.ts"]
+      "payflux-sdk": ["./packages/sdk/src/index.ts"]
     }
   },
   "include": ["next-env.d.ts", "app/**/*.ts", "app/**/*.tsx", "components/**/*.ts", "components/**/*.tsx", "lib/**/*.ts", "hooks/**/*.ts", ".next/types/**/*.ts"],

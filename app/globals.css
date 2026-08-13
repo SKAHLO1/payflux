@@ -6,9 +6,9 @@
 /*
   PayFlux design tokens.
 
-  The original landing page's identity is preserved and promoted to first-class tokens rather
-  than repeated as inline hex: the deep violet gradient, the coral glow that marks anything
-  interactive, and Audiowide as the display face.
+  The identity is carried by first-class tokens rather than repeated as inline hex: the deep
+  maroon gradient taken from the Payflux mark, the crimson glow that marks anything interactive,
+  and Audiowide as the display face.
 
   One deliberate change: Audiowide is now the *display* font only. It carries the brand in
   headings, figures and nav, while body copy and tabular data use Geist. A payments dashboard
@@ -18,22 +18,52 @@
 
 :root {
   /* --- brand ------------------------------------------------------- */
-  --pf-violet-900: #3b2f5c;
-  --pf-violet-800: #4a3b73;
-  --pf-violet-700: #5b4b8a;
-  --pf-violet-600: #7b5b8a;
-  --pf-violet-500: #8b6b9a;
-  --pf-violet-400: #a888b8;
+  /*
+    Derived from the Payflux mark, whose wine red is #8b1e2f.
 
-  --pf-coral: #ef4444;
-  --pf-coral-soft: rgba(239, 68, 68, 0.8);
-  --pf-coral-faint: rgba(239, 68, 68, 0.15);
+    That colour cannot do both jobs. As a ground it is right, but as the interactive accent it
+    sits too close to its own background to read as a control — so the accent is lifted to a
+    brighter crimson in the same hue family. Analogous, not a second brand colour.
+  */
+  --pf-logo: #8b1e2f;
 
-  /* Status colours, tuned to sit on the violet ground without vibrating. */
+  --pf-brand-900: #240e14;
+  --pf-brand-800: #34141d;
+  --pf-brand-700: #471a26;
+  --pf-brand-600: #5e2331;
+  --pf-brand-500: #7b2e3e;
+  --pf-brand-400: #a05264;
+
+  --pf-accent: #d6394f;
+  --pf-accent-soft: rgba(214, 57, 79, 0.8);
+  --pf-accent-faint: rgba(214, 57, 79, 0.15);
+
+  /*
+    Aliases kept so the ~70 existing `var(--pf-coral)` and `var(--pf-violet-*)` references across
+    18 files keep working. Renaming them would be pure churn with no visual effect and a real
+    chance of a typo; new code should use the names above.
+  */
+  --pf-violet-900: var(--pf-brand-900);
+  --pf-violet-800: var(--pf-brand-800);
+  --pf-violet-700: var(--pf-brand-700);
+  --pf-violet-600: var(--pf-brand-600);
+  --pf-violet-500: var(--pf-brand-500);
+  --pf-violet-400: var(--pf-brand-400);
+
+  --pf-coral: var(--pf-accent);
+  --pf-coral-soft: var(--pf-accent-soft);
+  --pf-coral-faint: var(--pf-accent-faint);
+
+  /* Status colours, tuned to sit on the maroon ground without vibrating. */
   --pf-success: #4ade80;
   --pf-pending: #fbbf24;
   --pf-info: #7dd3fc;
-  --pf-danger: #f87171;
+  /*
+    Shifted orange-ward, away from the old #f87171. On a red-branded UI a red failure state is
+    indistinguishable from every button on the page, which is exactly when it matters most that
+    it is not.
+  */
+  --pf-danger: #ff6b4a;
   --pf-idle: rgba(255, 255, 255, 0.55);
 
   /* Glass surfaces used across checkout and dashboard. */
@@ -42,10 +72,10 @@
   --pf-surface-border: rgba(255, 255, 255, 0.14);
   --pf-surface-border-strong: rgba(255, 255, 255, 0.24);
 
-  --pf-glow-sm: 0 0 12px rgba(239, 68, 68, 0.5);
-  --pf-glow: 0 0 20px rgba(239, 68, 68, 0.8), 0 0 40px rgba(239, 68, 68, 0.5);
-  --pf-glow-lg: 0 0 50px rgba(239, 68, 68, 0.8), 0 0 100px rgba(239, 68, 68, 0.6),
-    0 0 150px rgba(239, 68, 68, 0.4);
+  --pf-glow-sm: 0 0 12px rgba(214, 57, 79, 0.5);
+  --pf-glow: 0 0 20px rgba(214, 57, 79, 0.8), 0 0 40px rgba(214, 57, 79, 0.5);
+  --pf-glow-lg: 0 0 50px rgba(214, 57, 79, 0.8), 0 0 100px rgba(214, 57, 79, 0.6),
+    0 0 150px rgba(214, 57, 79, 0.4);
 
   /* --- shadcn tokens ------------------------------------------------ */
   --background: oklch(1 0 0);
@@ -227,7 +257,7 @@
   }
 
   .pf-text-glow {
-    text-shadow: 0 0 8px rgba(239, 68, 68, 0.8);
+    text-shadow: 0 0 8px rgba(214, 57, 79, 0.8);
   }
 
   .pf-nav-link {
@@ -236,7 +266,7 @@
 
   .pf-nav-link:hover {
     color: var(--pf-coral);
-    filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.8));
+    filter: drop-shadow(0 0 8px rgba(214, 57, 79, 0.8));
   }
 
   /* Hashes and addresses. Monospace, tabular, always truncatable. */
@@ -281,7 +311,7 @@
   background-image: linear-gradient(
     90deg,
     rgba(255, 255, 255, 0.08) 0%,
-    rgba(239, 68, 68, 0.35) 50%,
+    rgba(214, 57, 79, 0.35) 50%,
     rgba(255, 255, 255, 0.08) 100%
   );
   background-size: 200% 100%;

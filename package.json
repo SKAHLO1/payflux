@@ -2,7 +2,7 @@
   "name": "payflux",
   "version": "0.1.0",
   "private": true,
-  "description": "PayFlux — asset-agnostic payment infrastructure on Flare Coston2 and XRPL Testnet",
+  "description": "PayFlux \u2014 asset-agnostic payment infrastructure on Flare Coston2 and XRPL Testnet",
   "scripts": {
     "dev": "next dev",
     "dev:api": "npm run dev --workspace @payflux/backend",
@@ -17,9 +17,12 @@
     "poc": "tsx scripts/poc/e2e.ts",
     "poc:check": "tsx scripts/poc/e2e.ts --check",
     "poc:auto": "tsx scripts/poc/e2e.ts --pay",
+    "poc:fast": "tsx scripts/poc/native.ts --no-fdc",
+    "poc:fast:check": "tsx scripts/poc/native.ts --check",
     "xrpl:fund": "tsx scripts/xrpl/pay.ts --fund",
     "xrpl:pay": "tsx scripts/xrpl/pay.ts",
-    "verify:key": "tsx scripts/verify-key.ts"
+    "verify:key": "tsx scripts/verify-key.ts",
+    "poc:both": "tsx scripts/poc/native.ts"
   },
   "workspaces": [
     "packages/*",
@@ -28,7 +31,7 @@
   ],
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",
-    "@payflux/node": "*",
+    "payflux-sdk": "*",
     "@radix-ui/react-accordion": "1.2.2",
     "@radix-ui/react-alert-dialog": "1.1.4",
     "@radix-ui/react-aspect-ratio": "1.1.1",
