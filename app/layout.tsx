@@ -19,6 +19,15 @@ export const metadata: Metadata = {
   description:
     "One payment API for assets across chains. Customers pay with XRP on XRPL; Flare's Data Connector verifies it; merchants settle into FXRP on Coston2.",
   applicationName: "PayFlux",
+  /*
+   * Next generates these from app/icon.png and app/apple-icon.png by convention, so this block
+   * is not strictly required — it is here so the icons are greppable from the metadata rather
+   * than being an invisible side effect of two filenames.
+   */
+  icons: {
+    icon: "/icon.png",
+    apple: "/apple-icon.png",
+  },
 }
 
 export default function RootLayout({

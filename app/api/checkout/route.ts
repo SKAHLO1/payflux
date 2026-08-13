@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { PayFlux, PayFluxError } from "@payflux/node"
+import { PayFlux, PayFluxError } from "payflux-sdk"
 
 export const dynamic = "force-dynamic"
 
