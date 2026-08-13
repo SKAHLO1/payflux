@@ -1,7 +1,7 @@
 import { createHmac, timingSafeEqual } from "node:crypto"
 
 /**
- * @payflux/node — the merchant-facing SDK.
+ * payflux-sdk — the merchant-facing SDK.
  *
  * The point of this package is that nothing below leaks upward. A merchant integrating PayFlux
  * writes no chain code: no RPC URLs, no ABIs, no attestation types, no lot sizes. They express a

@@ -1,34 +1,43 @@
 {
-  "name": "@payflux/node",
-  "version": "0.1.0",
+  "name": "payflux-sdk",
+  "version": "0.1.1",
   "description": "PayFlux Node SDK — accept interoperable blockchain assets with one payment API",
   "type": "module",
-  "main": "src/index.ts",
-  "types": "src/index.ts",
+  "//": "These must point at dist, not src. npm's publishConfig only overrides publish-time keys such as registry, access and tag — it does NOT rewrite main/types/exports the way pnpm and yarn do. 0.1.0 shipped pointing at src/index.ts and was unloadable: Node threw ERR_UNKNOWN_FILE_EXTENSION on the .ts file. The `prepare` script keeps dist present for workspace consumers, so nothing depends on the source being importable.",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./src/index.ts",
-      "default": "./src/index.ts"
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
     }
   },
-  "//": "Source-first exports so the demo store and Next app consume the SDK without a build step (see transpilePackages in next.config.mjs). publishConfig swaps to the compiled output on npm publish.",
-  "publishConfig": {
-    "main": "dist/index.js",
-    "types": "dist/index.d.ts",
-    "exports": {
-      ".": {
-        "types": "./dist/index.d.ts",
-        "import": "./dist/index.js"
-      }
-    }
-  },
-  "files": ["dist", "src"],
+  "files": [
+    "dist",
+    "src"
+  ],
   "scripts": {
     "build": "tsc -p tsconfig.json",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "//prepare": "Runs on `npm install` in this workspace and again before `npm publish`. dist/ is gitignored, so without this a fresh clone would have no compiled output for main to point at — and a publish would ship a tarball whose entry point is missing.",
+    "prepare": "npm run build"
   },
-  "keywords": ["payments", "flare", "xrpl", "fassets", "fdc", "web3"],
+  "keywords": [
+    "payments",
+    "flare",
+    "xrpl",
+    "fassets",
+    "fdc",
+    "web3"
+  ],
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/SKAHLO1/payflux.git",
+    "directory": "packages/sdk"
+  },
+  "homepage": "https://github.com/SKAHLO1/payflux#readme",
+  "bugs": "https://github.com/SKAHLO1/payflux/issues",
   "engines": {
     "node": ">=20"
   },

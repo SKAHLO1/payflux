@@ -37,6 +37,7 @@ import {
 } from "../../backend/src/verification/xrpl.payment.js"
 import { matchPaymentProof } from "../../backend/src/verification/verification-result.js"
 import { generatePaymentReference } from "../../backend/src/payments/payment.service.js"
+import { sendXrplPayment } from "./xrpl-send.js"
 import type { PaymentIntent } from "../../backend/src/domain/types.js"
 
 const args = parseArgs(process.argv.slice(2))
@@ -158,11 +159,11 @@ async function main() {
   Sending ${requiredXrp} XRP to ${env.MERCHANT_XRPL_ADDRESS}
   Memo encodes reference ${reference}, which is what binds this transfer to this intent.
 `)
-    const hash = await sendPayment(
+    const hash = await sendXrplPayment(
       env.MERCHANT_XRPL_ADDRESS!,
       requiredXrp,
       memo.memoDataHex,
-      args.seed ?? process.env.XRPL_WALLET_SEED,
+      { seed: args.seed ?? process.env.XRPL_WALLET_SEED, log: ok },
     )
     ok(`Sent ${hash}`)
 
@@ -322,91 +323,6 @@ function parseArgs(argv: string[]) {
     else if (argv[i] === "--seed") out.seed = argv[++i]
   }
   return out
-}
-
-/**
- * Sends the XRPL transfer this script is otherwise waiting for.
- *
- * Only reached under `--pay`. It exists so the whole path can run unattended, which matters
- * because the manual step sits in the middle: without it you start the script, go and use a
- * faucet UI that cannot set a memo, and come back to a timeout.
- *
- * A wallet is funded from the testnet faucet when no seed is available, and the seed is printed
- * so the same wallet can be reused rather than begging the faucet on every run.
- */
-async function sendPayment(
-  destination: string,
-  amountXrp: string,
-  memoDataHex: string,
-  seed?: string,
-): Promise<string> {
-  const { Client, Wallet, xrpToDrops: toDrops } = await import("xrpl")
-
-  const wsUrl = env.XRPL_WS_URL
-  // The same guard pay.ts uses. A memo-carrying transfer to a mainnet address would be real money.
-  if (!/altnet|testnet|devnet/i.test(wsUrl)) {
-    fail(`XRPL_WS_URL does not look like a testnet endpoint: ${wsUrl}. Refusing to send.`)
-  }
-
-  const client = new Client(wsUrl)
-  await client.connect()
-
-  try {
-    let wallet
-    if (seed) {
-      wallet = Wallet.fromSeed(seed)
-      ok(`Paying from ${wallet.address}`)
-    } else {
-      ok("No XRPL_WALLET_SEED set — funding a throwaway testnet wallet…")
-
-      // Uses faucet.altnet.rippletest.net, the official testnet faucet. It is occasionally slow
-      // or rate limited, and when it is, the useful advice is to stop asking it for a new wallet
-      // on every run rather than to find another faucet.
-      const funded = await client.fundWallet().catch((error) => {
-        fail(
-          `The XRPL testnet faucet did not respond: ${error instanceof Error ? error.message : error}\n` +
-            `  Reuse a funded wallet instead — it is faster than any faucet:\n` +
-            `    set XRPL_WALLET_SEED in .env, or pass --seed sEd...\n` +
-            `  To fund one by hand: https://faucet.altnet.rippletest.net/accounts\n` +
-            `  Note: it must be XRPL *testnet*. FDC's testnet verifier does not index devnet.`,
-        )
-      })
-
-      wallet = funded.wallet
-      ok(`Funded ${wallet.address} with ${funded.balance} XRP`)
-      console.log(`\n  Reuse this wallet by adding to .env:\n    XRPL_WALLET_SEED=${wallet.seed}\n`)
-    }
-
-    const balance = Number(await client.getXrpBalance(wallet.address).catch(() => 0))
-    // XRPL holds a base reserve (1 XRP on testnet) that can never be spent.
-    if (balance - 1 < Number(amountXrp)) {
-      fail(
-        `Wallet holds ${balance} XRP, which does not cover ${amountXrp} XRP plus the 1 XRP ` +
-          `account reserve. Fund it at https://faucet.altnet.rippletest.net/accounts`,
-      )
-    }
-
-    const result = await client.submitAndWait(
-      {
-        TransactionType: "Payment",
-        Account: wallet.address,
-        Destination: destination,
-        Amount: toDrops(amountXrp),
-        // Exactly one 32-byte memo. More than one, or a different length, and FDC reports an
-        // empty standard payment reference and the transfer binds to nothing.
-        Memos: [{ Memo: { MemoData: memoDataHex } }],
-      },
-      { wallet },
-    )
-
-    const meta = result.result.meta
-    const code = typeof meta === "object" && meta ? meta.TransactionResult : "unknown"
-    if (code !== "tesSUCCESS") fail(`XRPL rejected the payment: ${code}`)
-
-    return result.result.hash
-  } finally {
-    await client.disconnect()
-  }
 }
 
 function banner(text: string) {
