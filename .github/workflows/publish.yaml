@@ -1,0 +1,39 @@
+name: Publish payflux-sdk
+
+# Publishing runs here rather than from a laptop so npm can attest *where* the tarball came
+# from. The provenance signature is derived from GitHub's OIDC identity, which only exists
+# inside a workflow run — it cannot be produced locally at any price.
+on:
+  release:
+    types: [published]
+  # Lets you re-run a failed publish without cutting another release.
+  workflow_dispatch:
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    permissions:
+      contents: read
+      # Required for provenance. Without it the publish still succeeds, but silently produces
+      # no attestation — which is the whole point of running it here.
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          # Also required: this writes the .npmrc that makes NODE_AUTH_TOKEN take effect.
+          # Omit it and the publish fails with a 401 despite a valid token.
+          registry-url: https://registry.npmjs.org
+
+      # The whole workspace, from the lockfile. The SDK's `prepare` script compiles dist/ as
+      # part of this, and npm runs it again before publish.
+      - run: npm ci
+
+      - run: npm publish --provenance
+        working-directory: packages/sdk
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
