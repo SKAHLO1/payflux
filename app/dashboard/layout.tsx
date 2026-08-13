@@ -47,7 +47,7 @@ function DashboardChrome({ children }: { children: React.ReactNode }) {
 
   return (
     <Shell ambient={false} deep>
-      <div className="mx-auto flex w-full max-w-[100rem] flex-col lg:flex-row">
+      <div className="flex w-full flex-col lg:flex-row">
         <aside className="shrink-0 border-b border-white/10 px-6 py-6 lg:h-screen lg:w-60 lg:border-b-0 lg:border-r lg:py-8 lg:sticky lg:top-0">
           <BrandMark subtitle="Dashboard" />
 
@@ -86,7 +86,7 @@ function DashboardChrome({ children }: { children: React.ReactNode }) {
           </div>
         </aside>
 
-        <main className="min-w-0 flex-1 px-6 py-8 md:px-10 lg:py-10">{children}</main>
+        <main className="min-w-0 flex-1 px-6 py-8 md:px-10 lg:px-12 lg:py-10">{children}</main>
       </div>
     </Shell>
   )
