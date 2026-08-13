@@ -1,5 +1,6 @@
 import type React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { cn } from "@/lib/utils"
 import { AmbientBackground, AmbientBloom } from "./ambient"
 
@@ -11,14 +12,36 @@ import { AmbientBackground, AmbientBloom } from "./ambient"
  * moving background behind a table of hashes is actively hostile — the gradient identity stays.
  */
 
+/**
+ * The mark plus wordmark.
+ *
+ * Deliberately not the full stacked lockup: that version carries the wordmark and the "crypto
+ * payments, simplified" tagline beneath the P, which needs vertical room a 40px nav bar does not
+ * have. The mark sits beside the existing Audiowide wordmark instead, which keeps the header
+ * proportions and lets the type stay live text.
+ *
+ * The knockout variant is used because the mark's own wine red is nearly invisible against the
+ * maroon ground it now shares.
+ */
 export function BrandMark({ className, subtitle }: { className?: string; subtitle?: string }) {
   return (
-    <Link href="/" className={cn("group inline-flex items-baseline gap-2.5", className)}>
-      <span className="font-display text-lg tracking-[0.14em] text-white transition-all duration-300 group-hover:text-[color:var(--pf-coral)] group-hover:drop-shadow-[0_0_10px_rgba(239,68,68,0.7)]">
+    <Link href="/" className={cn("group inline-flex items-center gap-2.5", className)}>
+      <Image
+        src="/payflux-mark-light.png"
+        alt=""
+        width={640}
+        height={467}
+        // Decorative: the wordmark beside it already names the product, so announcing it twice
+        // only makes the link more tedious to hear.
+        aria-hidden
+        priority
+        className="h-6 w-auto transition-all duration-300 group-hover:drop-shadow-[0_0_10px_rgba(214,57,79,0.7)]"
+      />
+      <span className="font-display text-lg tracking-[0.14em] text-white transition-all duration-300 group-hover:text-[color:var(--pf-accent)] group-hover:drop-shadow-[0_0_10px_rgba(214,57,79,0.7)]">
         PAYFLUX
       </span>
       {subtitle ? (
-        <span className="text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
+        <span className="self-end pb-0.5 text-[10px] font-semibold uppercase tracking-[0.2em] text-white/40">
           {subtitle}
         </span>
       ) : null}

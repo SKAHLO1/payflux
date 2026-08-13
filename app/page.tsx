@@ -125,14 +125,14 @@ export default function Home() {
           <div className="flex items-center justify-between border-b border-white/10 px-5 py-3">
             <span className="pf-hash text-white/45">checkout.ts</span>
             <span className="rounded-full border border-white/15 bg-white/5 px-2.5 py-0.5 text-[9px] font-bold uppercase tracking-[0.16em] text-white/50">
-              @payflux/node
+              payflux-sdk
             </span>
           </div>
           <pre className="overflow-x-auto px-5 py-5 text-[12.5px] leading-relaxed">
             <code className="font-mono text-white/80">
               <span className="text-[color:var(--pf-violet-400)]">import</span>{" "}
               {"{ PayFlux }"} <span className="text-[color:var(--pf-violet-400)]">from</span>{" "}
-              <span className="text-[color:var(--pf-info)]">&quot;@payflux/node&quot;</span>
+              <span className="text-[color:var(--pf-info)]">&quot;payflux-sdk&quot;</span>
               {"\n\n"}
               <span className="text-[color:var(--pf-violet-400)]">const</span> payflux ={" "}
               <span className="text-[color:var(--pf-violet-400)]">new</span> PayFlux({"{"}

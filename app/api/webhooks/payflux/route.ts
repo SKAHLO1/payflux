@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server"
-import { verifyWebhookSignature } from "@payflux/node"
+import { verifyWebhookSignature } from "payflux-sdk"
 
 export const dynamic = "force-dynamic"
 

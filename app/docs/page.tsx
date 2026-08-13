@@ -49,7 +49,7 @@ export default function DocsPage() {
               valid paths, proves the payment happened, and settles you in the asset you asked for.
             </p>
 
-            <Code language="typescript">{`import { PayFlux } from "@payflux/node"
+            <Code language="typescript">{`import { PayFlux } from "payflux-sdk"
 
 const payflux = new PayFlux({ apiKey: process.env.PAYFLUX_SECRET_KEY })
 
@@ -303,7 +303,7 @@ redirect(\`/checkout/\${payment.id}\`)`}</Code>
               delivered, signed, with retries at 5s, 30s, 2m, 10m and 1h.
             </p>
 
-            <Code language="typescript" filename="Verifying a delivery">{`import { verifyWebhookSignature } from "@payflux/node"
+            <Code language="typescript" filename="Verifying a delivery">{`import { verifyWebhookSignature } from "payflux-sdk"
 
 app.post("/webhooks/payflux",
   express.raw({ type: "application/json" }),
