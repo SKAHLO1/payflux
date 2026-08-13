@@ -45,7 +45,7 @@ way to forge one.
                           ┌────────────────────┐
                           │      MERCHANT      │
                           └─────────┬──────────┘
-                                    │  @payflux/node
+                                    │  payflux-sdk
                                     ▼
                           ┌────────────────────┐
                           │    EXPRESS API     │

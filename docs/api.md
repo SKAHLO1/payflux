@@ -201,7 +201,7 @@ X-PayFlux-Delivery:  whd_…
 ```
 
 HMAC-SHA256 over `` `${timestamp}.${rawBody}` ``. Verify with `verifyWebhookSignature` from
-`@payflux/node`, against the **raw** body — a re-serialized object will not match.
+`payflux-sdk`, against the **raw** body — a re-serialized object will not match.
 
 Retries: 5s, 30s, 2m, 10m, 1h, then `failed`.
 

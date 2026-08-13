@@ -91,7 +91,7 @@ forge one.
                           ┌────────────────────┐
                           │      MERCHANT      │
                           └─────────┬──────────┘
-                                    │  @payflux/node
+                                    │  payflux-sdk
                                     ▼
                           ┌────────────────────┐
                           │    EXPRESS API     │
@@ -128,7 +128,7 @@ backend/                Express API
   src/chain/            Provider, contract registry, FAssets, PaymentRegistry
   src/auth/             Google sign-in, API keys
 contracts/              PaymentRegistry.sol + Hardhat + tests
-packages/sdk/           @payflux/node
+packages/sdk/           payflux-sdk
 scripts/                PoC, XRPL payer, key verifier
 ```
 

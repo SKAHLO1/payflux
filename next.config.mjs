@@ -8,7 +8,7 @@ const nextConfig = {
   },
   // The SDK is consumed straight from source in this monorepo so the demo store needs no
   // build step. See the note in packages/sdk/package.json.
-  transpilePackages: ["@payflux/node"],
+  transpilePackages: ["payflux-sdk"],
 }
 
 export default nextConfig
