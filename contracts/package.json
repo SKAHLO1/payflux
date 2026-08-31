@@ -2,9 +2,9 @@
   "name": "@payflux/contracts",
   "version": "0.1.0",
   "private": true,
-  "description": "PayFlux PaymentRegistry — FDC-verified cross-ecosystem payment records on Flare Coston2",
+  "description": "PayFlux PaymentRegistry \u2014 FDC-verified cross-ecosystem payment records on Flare Coston2",
   "scripts": {
-    "build": "hardhat compile",
+    "build": "node init && hardhat compile",
     "test": "hardhat test",
     "deploy:coston2": "hardhat run scripts/deploy.ts --network coston2",
     "verify:coston2": "hardhat run scripts/verify.ts --network coston2"

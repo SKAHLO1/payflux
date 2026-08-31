@@ -1,9 +1,9 @@
 {
   "name": "payflux-sdk",
   "version": "0.1.1",
-  "description": "PayFlux Node SDK — accept interoperable blockchain assets with one payment API",
+  "description": "PayFlux Node SDK \u2014 accept interoperable blockchain assets with one payment API",
   "type": "module",
-  "//": "These must point at dist, not src. npm's publishConfig only overrides publish-time keys such as registry, access and tag — it does NOT rewrite main/types/exports the way pnpm and yarn do. 0.1.0 shipped pointing at src/index.ts and was unloadable: Node threw ERR_UNKNOWN_FILE_EXTENSION on the .ts file. The `prepare` script keeps dist present for workspace consumers, so nothing depends on the source being importable.",
+  "//": "These must point at dist, not src. npm's publishConfig only overrides publish-time keys such as registry, access and tag \u2014 it does NOT rewrite main/types/exports the way pnpm and yarn do. 0.1.0 shipped pointing at src/index.ts and was unloadable: Node threw ERR_UNKNOWN_FILE_EXTENSION on the .ts file. The `prepare` script keeps dist present for workspace consumers, so nothing depends on the source being importable.",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {
@@ -17,9 +17,9 @@
     "src"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json",
+    "build": "node init && tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "//prepare": "Runs on `npm install` in this workspace and again before `npm publish`. dist/ is gitignored, so without this a fresh clone would have no compiled output for main to point at — and a publish would ship a tarball whose entry point is missing.",
+    "//prepare": "Runs on `npm install` in this workspace and again before `npm publish`. dist/ is gitignored, so without this a fresh clone would have no compiled output for main to point at \u2014 and a publish would ship a tarball whose entry point is missing.",
     "prepare": "npm run build"
   },
   "keywords": [
